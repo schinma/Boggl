@@ -1,0 +1,2 @@
+# Boggl
+Small boggle game
