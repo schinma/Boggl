@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -31,12 +33,20 @@ public class GameManager : MonoBehaviour
 
     public int score = 0;
 
+    [HideInInspector]
+    public List<GameObject> players;
+
     private bool roundStarted = false;
     private int currentRoundNumber = 0;
+    private PhotonView PV;
+    private int playerInGame = 0;
+
+    #region UNITY
 
     private void Start()
     {
         display.UpdateGameScoreText(0);
+        PV = GetComponent<PhotonView>();
     }
 
     // Update is called once per frame
@@ -47,6 +57,8 @@ public class GameManager : MonoBehaviour
             FinishRound();
         }
     }
+
+    #endregion
 
     public void GoToLobbyScreen()
     {
@@ -185,4 +197,30 @@ public class GameManager : MonoBehaviour
                 break;
         }
     }
+
+    public void StartGameButton()
+    {
+        if (!PhotonNetwork.IsMasterClient) {
+            return;
+        }
+
+        PV.RPC("RPC_StartGame", RpcTarget.All);
+    }
+
+    #region PUN RPCs
+
+    [PunRPC]
+    private void RPC_CreatePlayer(string name)
+    {
+        GameObject  newPlayer = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PhotonNetworkPlayer"), Vector3.zero, Quaternion.identity);
+        players.Add(newPlayer);
+    }
+
+    [PunRPC]
+    private void RPC_StartGame()
+    {
+        StartGame();
+    }
+
+    #endregion
 }
