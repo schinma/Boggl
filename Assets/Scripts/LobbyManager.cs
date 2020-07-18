@@ -55,15 +55,6 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     public override void OnConnectedToMaster()
     {
         Debug.Log("Connected to master server");
-
-        /*if (_isConnecting) 
-        {
-            if (_isRandomJoin) {
-                PhotonNetwork.JoinRandomRoom();
-            } else {
-                PhotonNetwork.JoinRoom(_roomName);
-            }
-        }*/
     }
 
     public override void OnCreatedRoom()

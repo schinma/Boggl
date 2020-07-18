@@ -38,6 +38,9 @@ MonoBehaviour:
   - RespawnSpaceship
   - RPC_CreatePlayer
   - RPC_StartGame
+  - StartRound
+  - RPC_StartRound
+  - RPC_SendLetters
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

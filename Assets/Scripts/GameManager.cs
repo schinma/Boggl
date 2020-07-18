@@ -37,6 +37,7 @@ public class GameManager : MonoBehaviour
     public List<GameObject> players;
 
     private bool roundStarted = false;
+    private bool gameStarted = false;
     private int currentRoundNumber = 0;
     private PhotonView PV;
     private int playerInGame = 0;
@@ -76,7 +77,7 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
-
+        gameStarted = true;
         lobbyPanel.SetActive(false);
         gamePanel.SetActive(true);
         endPanel.SetActive(false);
@@ -136,6 +137,7 @@ public class GameManager : MonoBehaviour
 
     IEnumerator EndGameCoroutine()
     {
+        gameStarted = false;
         endPanel.SetActive(true);
         shuffleButton.interactable = false;
         yield return new WaitForSeconds(5);
@@ -175,6 +177,8 @@ public class GameManager : MonoBehaviour
         return result;
     }
 
+    #region SETTERS GETTERS
+
     public void SetRoundsNumber(int number)
     {
         numberOfRounds = number + 3;
@@ -198,13 +202,26 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public bool isGameStarted()
+    {
+        return gameStarted;
+    }
+
+    public bool isRoundStarted()
+    {
+        return roundStarted;
+    }
+
+    #endregion
+
     public void StartGameButton()
     {
-        if (!PhotonNetwork.IsMasterClient) {
-            return;
-        }
-
         PV.RPC("RPC_StartGame", RpcTarget.All);
+    }
+
+    public void StartRoundButton()
+    {
+        PV.RPC("RPC_StartRound", RpcTarget.All);
     }
 
     #region PUN RPCs
@@ -220,6 +237,14 @@ public class GameManager : MonoBehaviour
     private void RPC_StartGame()
     {
         StartGame();
+    }
+
+    [PunRPC]
+    private void RPC_StartRound()
+    {
+        if (roundStarted)
+            return;
+        StartRound();
     }
 
     #endregion

@@ -1,9 +1,11 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+
 
 public class Grid : MonoBehaviour
 {
@@ -19,6 +21,8 @@ public class Grid : MonoBehaviour
     public TextAsset[] dictionaryTexts;
     private Trie dictionary;
 
+    private PhotonView PV;
+
     private Dice.Letter[] letters = new Dice.Letter[DICE_NUMBER];
 
     private bool startedWord = false;
@@ -32,6 +36,7 @@ public class Grid : MonoBehaviour
     {
         //LoadDictionnary(GameManager.Langage.FR);
         gridDisplay.WriteWarning("");
+        PV = GetComponent<PhotonView>();
     }
 
     public void LoadDictionnary(GameManager.Langage lan)
@@ -69,6 +74,9 @@ public class Grid : MonoBehaviour
 
     public void ShakeLetters()
     {
+        if (!PhotonNetwork.IsMasterClient)
+            return;
+
         List<int> list = new List<int>(Enumerable.Range(0, 16));
 
         int count = list.Count;
@@ -86,8 +94,43 @@ public class Grid : MonoBehaviour
             letters[list[i]] = dices[i].faces[Random.Range(0, 5)];
         }
 
+        PV.RPC("RPC_SendLetters", RpcTarget.Others, LetterArrayToString());
+
+        gridDisplay.DisplayLetters(letters); 
+        audio.PlayShuffle();
+    }
+
+    [PunRPC]
+    private void RPC_SendLetters(string newLetters)
+    {
+        StringToLetterArray(newLetters);
         gridDisplay.DisplayLetters(letters);
         audio.PlayShuffle();
+    }
+
+    private string LetterArrayToString()
+    {
+        string result = string.Empty;
+
+        foreach(Dice.Letter letter in letters) {
+            result += letter + ",";
+        }
+
+        return result;
+    }
+
+    private void StringToLetterArray(string str)
+    {
+        Debug.Log("received " + str);
+        string[] splits = str.Split(',');
+
+        for (int i = 0; i < DICE_NUMBER; i++) {
+            letters[i] = Dice.CharToLetter(splits[i][0]);
+        }
+
+        foreach(Dice.Letter letter in letters) {
+            Debug.Log(letter);
+        }
     }
 
     public void StartWord(int diceIndex)
