@@ -109,6 +109,11 @@ public class GameManager : MonoBehaviour
     public void FinishRound()
     {
         roundStarted = false;
+
+        foreach(GameObject player in players) {
+            player.GetComponent<NetworkPlayer>().SendWorldList(gridManager.GetWordFound());
+        }
+
         int roundScore = CalculateRoundScore(gridManager.GetWordFound());
         score += roundScore;
         display.UpdateGameScoreText(score);
@@ -216,12 +221,13 @@ public class GameManager : MonoBehaviour
 
     public void StartGameButton()
     {
-        PV.RPC("RPC_StartGame", RpcTarget.All);
+        PV.RPC("RPC_StartGame", RpcTarget.AllBuffered);
+        PV.RPC("RPC_CreatePlayer", RpcTarget.AllBuffered, PhotonNetwork.LocalPlayer.NickName);
     }
 
     public void StartRoundButton()
     {
-        PV.RPC("RPC_StartRound", RpcTarget.All);
+        PV.RPC("RPC_StartRound", RpcTarget.AllBuffered);
     }
 
     #region PUN RPCs
@@ -229,8 +235,9 @@ public class GameManager : MonoBehaviour
     [PunRPC]
     private void RPC_CreatePlayer(string name)
     {
-        GameObject  newPlayer = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PhotonNetworkPlayer"), Vector3.zero, Quaternion.identity);
+        GameObject  newPlayer = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PhotonNetworkPlayer"), Vector3.zero, Quaternion.identity);      
         players.Add(newPlayer);
+        Debug.Log("Create player named " + name);
     }
 
     [PunRPC]

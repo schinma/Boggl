@@ -94,7 +94,7 @@ public class Grid : MonoBehaviour
             letters[list[i]] = dices[i].faces[Random.Range(0, 5)];
         }
 
-        PV.RPC("RPC_SendLetters", RpcTarget.Others, LetterArrayToString());
+        PV.RPC("RPC_SendLetters", RpcTarget.OthersBuffered, LetterArrayToString());
 
         gridDisplay.DisplayLetters(letters); 
         audio.PlayShuffle();
