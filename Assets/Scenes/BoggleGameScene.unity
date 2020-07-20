@@ -7137,6 +7137,9 @@ MonoBehaviour:
   endPanel: {fileID: 809047908}
   endRoundPanel: {fileID: 2111423650}
   connectionPanel: {fileID: 1563668726}
+  roundNumberDropdown: {fileID: 1157241725}
+  roundTimeDropdown: {fileID: 325663460}
+  languageDropdown: {fileID: 1925030296}
   numberOfRounds: 3
   roundTime: 60
   langage: 0

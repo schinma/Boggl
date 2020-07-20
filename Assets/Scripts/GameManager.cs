@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,6 +26,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject endPanel;
     [SerializeField] private GameObject endRoundPanel;
     [SerializeField] private GameObject connectionPanel;
+    [SerializeField] private Dropdown roundNumberDropdown;
+    [SerializeField] private Dropdown roundTimeDropdown;
+    [SerializeField] private Dropdown languageDropdown;
+
 
     [Header("Game settings")] 
     public int numberOfRounds = 3;
@@ -114,7 +119,11 @@ public class GameManager : MonoBehaviour
             player.GetComponent<NetworkPlayer>().SendWorldList(gridManager.GetWordFound());
         }
 
-        int roundScore = CalculateRoundScore(gridManager.GetWordFound());
+        List<string> remainingWords = RemoveWords();
+
+        Debug.Log(string.Join(";", remainingWords)) ;
+
+        int roundScore = CalculateRoundScore(remainingWords);
         score += roundScore;
         display.UpdateGameScoreText(score);
         gridManager.BlockGrid();
@@ -122,6 +131,24 @@ public class GameManager : MonoBehaviour
 
         audioManager.PlayEndRound();
         StartCoroutine(EndRoundCoroutine(roundScore));
+    }
+
+    private List<string> RemoveWords()
+    {
+        List<string> result = gridManager.GetWordFound();
+
+        foreach(GameObject player in players) {
+            NetworkPlayer NP = player.GetComponent<NetworkPlayer>();
+            if (!player.GetPhotonView().IsMine) {
+                foreach(string word in NP.wordList) {
+                    if (result.Contains(word)) {
+                        result.Remove(word);
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 
     IEnumerator EndRoundCoroutine(int roundScore)
@@ -186,25 +213,17 @@ public class GameManager : MonoBehaviour
 
     public void SetRoundsNumber(int number)
     {
-        numberOfRounds = number + 3;
+        PV.RPC("RPC_SetRoundNumber", RpcTarget.AllBuffered, number);
     }
 
     public void SetRoundTime(int time)
     {
-        roundTime = time * 30 + 60;
+        PV.RPC("RPC_SetRoundTime", RpcTarget.AllBuffered, time);
     }
 
     public void SetLangage(int lan)
     {
-        switch(lan)
-        {
-            case 0:
-                langage = Langage.FR;
-                break;
-            case 1:
-                langage = Langage.ENG;
-                break;
-        }
+        PV.RPC("RPC_SetLangage", RpcTarget.AllBuffered, lan);
     }
 
     public bool isGameStarted()
@@ -254,5 +273,32 @@ public class GameManager : MonoBehaviour
         StartRound();
     }
 
+    [PunRPC]
+    private void RPC_SetRoundTime(int time)
+    {
+        roundTime = roundTime * 30 + 60;
+        roundTimeDropdown.value = time;
+    }
+
+    [PunRPC]
+    private void RPC_SetRoundNumber(int number)
+    {
+        numberOfRounds = number + 3;
+        roundNumberDropdown.value = number;
+    }
+
+    [PunRPC]
+    private void RPC_SetLangage(int lan)
+    {
+        switch (lan) {
+            case 0:
+                langage = Langage.FR;
+                break;
+            case 1:
+                langage = Langage.ENG;
+                break;
+        }
+        languageDropdown.value = lan;
+    }
     #endregion
 }

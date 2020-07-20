@@ -220,19 +220,19 @@ public class Grid : MonoBehaviour
     {
         if (word.Length < 3)
         {
-            Debug.Log("Word not valid in length");
+            //Debug.Log("Word not valid in length");
             gridDisplay.WriteWarning("Le mot doit faire plus de 2 lettres");
             return false;
         }
         if (!dictionary.FindWord(word))
         {
-            Debug.Log("Word not in dictionary : " + word);
+            //Debug.Log("Word not in dictionary : " + word);
             gridDisplay.WriteWarning("Le mot "+ word + " n'est pas dans le dictionnaire");
             return false;
         }
         if (wordFoundList.Contains(word))
         {
-            Debug.Log("Word already found : " + word);
+            //Debug.Log("Word already found : " + word);
             gridDisplay.WriteWarning("Le mot " + word + " a déjà été trouvé");
             return false;
         }

@@ -42,6 +42,10 @@ MonoBehaviour:
   - RPC_StartRound
   - RPC_SendLetters
   - RPC_SetWorldList
+  - RPC_SetRoundTime
+  - RPC_SetRoundNumber
+  - RPC_SetLanguage
+  - RPC_SetLangage
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
