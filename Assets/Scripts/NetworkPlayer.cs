@@ -6,9 +6,9 @@ using UnityEngine;
 
 public class NetworkPlayer : MonoBehaviour
 {
-    [HideInInspector] public string name;
-    [HideInInspector] public int score;
-    [HideInInspector] public List<string> wordList;
+    public string name;
+    public int score;
+    public List<string> wordList;
 
     private PhotonView PV;
 
@@ -18,6 +18,8 @@ public class NetworkPlayer : MonoBehaviour
         if (PV.IsMine) {
             name = PhotonNetwork.LocalPlayer.NickName;
         }
+
+        FindObjectOfType<GameManager>().players.Add(this);
     }
 
     public void SendWorldList(List<string> wl)
@@ -37,5 +39,6 @@ public class NetworkPlayer : MonoBehaviour
         foreach(string split in splits) {
             wordList.Add(split);
         }
+        Debug.Log("List received " + string.Join(",",wordList));
     }
 }

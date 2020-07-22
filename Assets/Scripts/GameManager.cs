@@ -1,4 +1,5 @@
 ﻿using Photon.Pun;
+using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -6,8 +7,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GameManager : MonoBehaviour
-{
+public class GameManager : MonoBehaviour {
 
     public enum Langage { FR, ENG, NONE };
 
@@ -39,7 +39,8 @@ public class GameManager : MonoBehaviour
     public int score = 0;
 
     [HideInInspector]
-    public List<GameObject> players;
+    public List<NetworkPlayer> players;
+    private NetworkPlayer myPlayer;
 
     private bool roundStarted = false;
     private bool gameStarted = false;
@@ -115,13 +116,10 @@ public class GameManager : MonoBehaviour
     {
         roundStarted = false;
 
-        foreach(GameObject player in players) {
-            player.GetComponent<NetworkPlayer>().SendWorldList(gridManager.GetWordFound());
-        }
-
+        myPlayer.SendWorldList(gridManager.GetWordFound());
+        
         List<string> remainingWords = RemoveWords();
-
-        Debug.Log(string.Join(";", remainingWords)) ;
+        Debug.Log("remaining " + string.Join(";", remainingWords)) ;
 
         int roundScore = CalculateRoundScore(remainingWords);
         score += roundScore;
@@ -135,19 +133,18 @@ public class GameManager : MonoBehaviour
 
     private List<string> RemoveWords()
     {
-        List<string> result = gridManager.GetWordFound();
+        List<string> result = new List<string>(gridManager.GetWordFound());
 
-        foreach(GameObject player in players) {
-            NetworkPlayer NP = player.GetComponent<NetworkPlayer>();
-            if (!player.GetPhotonView().IsMine) {
-                foreach(string word in NP.wordList) {
+        foreach(NetworkPlayer player in players) {
+            Debug.Log("other lists "+ player.name + string.Join(";", player.wordList));
+            if (!player.gameObject.GetComponent<PhotonView>().IsMine) {        
+                foreach (string word in player.wordList) {
                     if (result.Contains(word)) {
                         result.Remove(word);
                     }
                 }
             }
         }
-
         return result;
     }
 
@@ -241,7 +238,6 @@ public class GameManager : MonoBehaviour
     public void StartGameButton()
     {
         PV.RPC("RPC_StartGame", RpcTarget.AllBuffered);
-        PV.RPC("RPC_CreatePlayer", RpcTarget.AllBuffered, PhotonNetwork.LocalPlayer.NickName);
     }
 
     public void StartRoundButton()
@@ -254,14 +250,21 @@ public class GameManager : MonoBehaviour
     [PunRPC]
     private void RPC_CreatePlayer(string name)
     {
-        GameObject  newPlayer = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PhotonNetworkPlayer"), Vector3.zero, Quaternion.identity);      
-        players.Add(newPlayer);
+        GameObject  newPlayer = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PhotonNetworkPlayer"), Vector3.zero, Quaternion.identity);
+        newPlayer.GetComponent<NetworkPlayer>().name = name;
         Debug.Log("Create player named " + name);
+        
+        if (newPlayer.GetPhotonView().IsMine) {
+            myPlayer = newPlayer.GetComponent<NetworkPlayer>();
+        }
     }
 
     [PunRPC]
     private void RPC_StartGame()
     {
+        if (PV.IsMine) {
+            PV.RPC("RPC_CreatePlayer", RpcTarget.AllBuffered, PhotonNetwork.LocalPlayer.NickName);
+        }
         StartGame();
     }
 
@@ -276,7 +279,7 @@ public class GameManager : MonoBehaviour
     [PunRPC]
     private void RPC_SetRoundTime(int time)
     {
-        roundTime = roundTime * 30 + 60;
+        roundTime = time * 30 + 60;
         roundTimeDropdown.value = time;
     }
 

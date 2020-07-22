@@ -94,7 +94,7 @@ public class Grid : MonoBehaviour
             letters[list[i]] = dices[i].faces[Random.Range(0, 5)];
         }
 
-        PV.RPC("RPC_SendLetters", RpcTarget.OthersBuffered, LetterArrayToString());
+        PV.RPC("RPC_SendLetters", RpcTarget.OthersBuffered, string.Join(",", letters));
 
         gridDisplay.DisplayLetters(letters); 
         audio.PlayShuffle();
@@ -108,28 +108,13 @@ public class Grid : MonoBehaviour
         audio.PlayShuffle();
     }
 
-    private string LetterArrayToString()
-    {
-        string result = string.Empty;
-
-        foreach(Dice.Letter letter in letters) {
-            result += letter + ",";
-        }
-
-        return result;
-    }
-
     private void StringToLetterArray(string str)
     {
-        Debug.Log("received " + str);
+        //Debug.Log("received " + str);
         string[] splits = str.Split(',');
 
         for (int i = 0; i < DICE_NUMBER; i++) {
             letters[i] = Dice.CharToLetter(splits[i][0]);
-        }
-
-        foreach(Dice.Letter letter in letters) {
-            Debug.Log(letter);
         }
     }
 
